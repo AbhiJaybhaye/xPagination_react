@@ -4,21 +4,28 @@ const Pagination = () => {
   const [employeeList, setEmployeeList] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const maxRows = 10;
-  
+
   useEffect(() => {
-    fetch("https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json")
-      .then((res) => {
-        if (!res.ok) {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json"
+        );
+        if (!response.ok) {
           throw new Error("Network response was not ok");
         }
-        return res.json();
-      })
-      .then((data) => setEmployeeList(data))
-      .catch((err) => {
-        setError(err.message);
-        alert("Failed to fetch data");
-      });
+        const result = await response.json();
+        setEmployeeList(result);
+        setIsLoading(false);
+      } catch (error) {
+        setError("failed to fetch data");
+        setIsLoading(false);
+        alert("Failed to fetch data.Please try again later.");
+      }
+    };
+    fetchData();
   }, []);
 
   const maxPages = Math.ceil(employeeList.length / maxRows);
@@ -33,10 +40,17 @@ const Pagination = () => {
   const handlePrev = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
-
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>{error}</div>;
+  }
   return (
     <div className="w-full p-4">
-      <h1 className="text-2xl font-bold text-center mb-4">Employee Data Table</h1>
+      <h1 className="text-2xl font-bold text-center mb-4">
+        Employee Data Table
+      </h1>
       {error ? (
         <p className="text-red-500 text-center">Error: {error}</p>
       ) : (
